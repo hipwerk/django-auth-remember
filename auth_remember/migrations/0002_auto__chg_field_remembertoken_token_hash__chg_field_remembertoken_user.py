@@ -4,6 +4,16 @@ from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
 
+try:
+    from django.contrib.auth import get_user_model
+except ImportError:
+    from django.contrib.auth.models import User
+else:
+    User = get_user_model()
+
+user_orm_label = '%s.%s' % (User._meta.app_label, User._meta.object_name)
+user_model_label = '%s.%s' % (User._meta.app_label, User._meta.module_name)
+
 
 class Migration(SchemaMigration):
 
@@ -13,7 +23,7 @@ class Migration(SchemaMigration):
         db.alter_column(u'auth_remember_remembertoken', 'token_hash', self.gf('django.db.models.fields.CharField')(max_length=60, primary_key=True))
 
         # Changing field 'RememberToken.user'
-        db.alter_column(u'auth_remember_remembertoken', 'user_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['custom_user.User']))
+        db.alter_column(u'auth_remember_remembertoken', 'user_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[user_orm_label]))
 
         # Changing field 'RememberToken.created'
         db.alter_column(u'auth_remember_remembertoken', 'created', self.gf('django.db.models.fields.DateTimeField')(null=True))
@@ -24,7 +34,7 @@ class Migration(SchemaMigration):
         db.alter_column(u'auth_remember_remembertoken', 'token_hash', self.gf('django.db.models.fields.CharField')(max_length=128, primary_key=True))
 
         # Changing field 'RememberToken.user'
-        db.alter_column(u'auth_remember_remembertoken', 'user_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User']))
+        db.alter_column(u'auth_remember_remembertoken', 'user_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm[user_orm_label]))
 
         # Changing field 'RememberToken.created'
         db.alter_column(u'auth_remember_remembertoken', 'created', self.gf('django.db.models.fields.DateTimeField')())
@@ -48,7 +58,7 @@ class Migration(SchemaMigration):
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'null': 'True'}),
             'created_initial': ('django.db.models.fields.DateTimeField', [], {}),
             'token_hash': ('django.db.models.fields.CharField', [], {'max_length': '60', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'remember_me_tokens'", 'to': u"orm['custom_user.User']"})
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'remember_me_tokens'", 'to': u"orm[user_orm_label]"})
         },
         u'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
@@ -57,8 +67,8 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        u'custom_user.user': {
-            'Meta': {'object_name': 'User'},
+        user_model_label: {
+            'Meta': {'object_name': User.__name__, 'db_table': "'%s'" % User._meta.db_table},
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'null': 'True', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),

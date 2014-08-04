@@ -4,6 +4,16 @@ from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
 
+try:
+    from django.contrib.auth import get_user_model
+except ImportError:
+    from django.contrib.auth.models import User
+else:
+    User = get_user_model()
+
+user_orm_label = '%s.%s' % (User._meta.app_label, User._meta.object_name)
+user_model_label = '%s.%s' % (User._meta.app_label, User._meta.module_name)
+
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
@@ -13,7 +23,7 @@ class Migration(SchemaMigration):
             ('token_hash', self.gf('django.db.models.fields.CharField')(max_length=128, primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('created_initial', self.gf('django.db.models.fields.DateTimeField')()),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='remember_me_tokens', to=orm['auth.User'])),
+            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='remember_me_tokens', to=orm[user_orm_label])),
         ))
         db.send_create_signal('auth_remember', ['RememberToken'])
 
@@ -38,8 +48,8 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
-        'auth.user': {
-            'Meta': {'object_name': 'User'},
+        user_model_label: {
+            'Meta': {'object_name': User.__name__, 'db_table': "'%s'" % User._meta.db_table},
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
@@ -59,7 +69,7 @@ class Migration(SchemaMigration):
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'created_initial': ('django.db.models.fields.DateTimeField', [], {}),
             'token_hash': ('django.db.models.fields.CharField', [], {'max_length': '128', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'remember_me_tokens'", 'to': "orm['auth.User']"})
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'remember_me_tokens'", 'to': "orm[user_orm_label]"})
         },
         'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
@@ -71,3 +81,4 @@ class Migration(SchemaMigration):
     }
 
     complete_apps = ['auth_remember']
+
